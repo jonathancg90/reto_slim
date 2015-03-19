@@ -1,24 +1,37 @@
 <?php
 
 require '../vendor/autoload.php';
-require '../Config.php';
+require '../config.php';
+require '../constants.php';
 
+use middlewares\HttpAuth;
+
+session_start();
+
+$twigView = new \Slim\Views\Twig();
 
 $app = new \Slim\Slim(array(
     'debug' => true,
+    'view' => $twigView,
     'templates.path' => '../views/',
 ));
 
-// require '../config/app.php';
-// require '../config/connectionBD.php';
+// View options
+$view = $app->view();
 
-// session_start();
+$view->parserExtensions = array(
+    new \Slim\Views\TwigExtension(),
+);
 
-// $db = conection('localhost', 'setour', 'root', 'root');
+//Router
 
 $routers = glob('../routers/*.router.php');
 foreach ($routers as $router) {
     require $router;
 }
+
+//Middlewares
+
+$app->add(new HttpAuth());
 
 $app->run();

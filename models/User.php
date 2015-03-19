@@ -1,7 +1,6 @@
 <?php
-namespace models;
 
-include_once('../lib/Core.php');
+namespace models;
 
 use lib\Core;
 use PDO;
@@ -33,11 +32,12 @@ class User{
 		$sql = "select * from user WHERE id=$id";
 		$stmt = $this->core->dbh->prepare($sql);
 		if ($stmt->execute()) {
-			$r = $stmt->fetchAll(PDO::FETCH_ASSOC);		   	
+			$r = $stmt->fetchAll(PDO::FETCH_ASSOC);	
+			return $r[0];	   	
 		} else {
 			$r = 0;
+			return $r;
 		}		
-		return $r;
 	}
 
 	public function insertUser($data) {
@@ -57,17 +57,58 @@ class User{
 	}
 	public function updateUser($data) {
 		try {
-			$sql = "update user set email=:email, password=:password, name=:name, last_name=:last_name, address=:address, photo=:photo, group_id=:group_id where id=:id";
+			$sql = "update user set email=:email, name=:name, last_name=:last_name, address=:address, photo=:photo, group_id=:group_id where id=:id";
 			$stmt = $this->core->dbh->prepare($sql);
 			if ($stmt->execute($data)) {
-				return "1";
+				return true;
 			} else {
-				return '0';
+				return false;
 			}
 		} catch(PDOException $e) {
         	return $e->getMessage();
     	}
-		
+	}
+
+	public function deleteUser($id) {
+		try {
+			$sql = "delete from user where id=$id";
+			$stmt = $this->core->dbh->prepare($sql);
+			if ($stmt->execute($data)) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch(PDOException $e) {
+        	return $e->getMessage();
+    	}
+	}
+
+	static function login($email, $password) {
+		try {
+			$core = Core::getInstance();
+
+			$sql = "select * from user WHERE email='$email'";
+			$stmt = $core->dbh->prepare($sql);
+			if ($stmt->execute()) {
+				if($stmt->rowCount() > 0){	
+					$user = $stmt->fetchAll(PDO::FETCH_ASSOC);	
+					if (crypt($password, $user[0]["password"]) == $user[0]["password"]){
+					   $result = true;
+			        } else {
+			        	$result = false;
+			        }
+				} else {
+					$result = false;
+				}	   	
+			} else {
+				$result = false;
+			}		
+
+
+	        return $result;
+        } catch(PDOException $e) {
+        	echo  $e->getMessage();
+    	}
 	}
 
 }

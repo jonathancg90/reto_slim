@@ -1,66 +1,37 @@
 <?php
-include_once('../models/User.php');
 use models\User;
+use models\UserGroup;
 
-$app->get('/', function () use($app){
-	$user = new User();
-	$users = $user->getUsers();
-    $data['users'] = $users;
-    $app->render('user/list.php', $data);
-});
-
-$app->get('/prueba', function (){
-    echo "prueba";
-});
+use controllers\UserCtrl;
 
 $app->group('/user', function () use($app) {
 
-	$app->get('/', function () use($app) {
-		$user = new User();
-		$users = $user->getUsers();
-		$app->contentType('application/json');
-		echo json_encode($users);
-	});
+	$app->get('/data-user', function () use($app){
+		UserCtrl::get_json_users($app);
+	})->name('user_data_list');
 
+	$app->get('/', function () use($app){
+		UserCtrl::get_index($app);
+	})->name('user_list');
+
+	$app->get('/new', function () use($app){
+		UserCtrl::show_create($app);
+	})->name('new_user');
+
+	$app->get('/edit/:user_id', function ($user_id) use($app){
+		UserCtrl::show_edit($app, $user_id);
+	})->name('edit_user');
 
 	$app->post('/save', function () use($app){
-		$request = $app->request;
-		$params = array(
-			":email" 	=> $request->post("email"),
-			":password" => $request->post("password"),
-			":name" 	=> $request->post("name"),
-			":last_name"=> $request->post("last_name"),
-			":address" 	=> $request->post("address"),
-			":photo" 	=> $request->post("photo"),
-			":group_id" => $request->post("group_id")
-		);
-
-		$user = new User();
-		$response = $user->insertUser($params);
-		echo json_encode($response);
-	});
+		UserCtrl::save_user($app);
+	})->name('user_save');
 
 	$app->put('/update/:user_id', function ($user_id) use($app){
-		$request = $app->request;
+		UserCtrl::update_user($app, $user_id);
+	})->name('user_update');
 
-		$user = new User();
-		$user = $user->getUserById($user_id);
-		if($user){
-			$params = array(
-				":id" 		=> $user_id,
-				":email" 	=> $request->put("email"),
-				":password" => $request->put("password"),
-				":name" 	=> $request->put("name"),
-				":last_name"=> $request->put("last_name"),
-				":address" 	=> $request->put("address"),
-				":photo" 	=> $request->put("photo"),
-				":group_id" => $request->put("group_id")
-			);
-			// echo json_encode($params);
-			$user = new User();
-			$response = $user->updateUser($params);
-			echo json_encode($response);
-		}
-	});
+	$app->delete("/delete/:user_id", function ($user_id) use($app) {
+		UserCtrl::delete_user($app, $user_id);
+	})->name('user_delete');
 
 });
